@@ -1,0 +1,32 @@
+#!/usr/bin/env ruby
+require 'traffiction'
+require 'optparse'
+def opts_from_cli
+  options = {}
+  opt_parser = OptionParser.new do |opts|
+    opts.banner = "#{$0} [options] url"
+    opts.on('-v', '--verbose', 'Verbose output') { options[:verbose] = true }
+    opts.on('-p PORT', '--port PORT', 'Port') { |port| options[:port] = port }
+    opts.on('-c COUNT', '--count COUNT', 'Number of visits to perform') { |count| options[:count] = count.to_i }
+    opts.on('-t THREADS', '--threads THREADS', 'Number of threads to use') { |threads| options[:threads] = threads.to_i }
+    opts.on('-h', '--help', 'Display this screen') { puts opts ; exit }
+  end
+  opt_parser.parse!
+
+  options[:count] = 5 if options[:count].to_i == 0
+  options[:threads] = 4 if options[:threads].to_i == 0
+  options[:url] = ARGV.pop
+  abort opt_parser.to_s if options[:url].nil?
+
+  options[:url] = options[:url].sub('http://', '')
+  if options[:url] =~ /^(.*?):(\d+)$/
+    options[:url] = $1
+    options[:port] = $2
+  else
+    options[:port] = 80
+  end
+  puts options.inspect if options[:verbose]
+  options
+end
+
+Traffiction.generate(opts_from_cli)
